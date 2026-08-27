@@ -1,178 +1,142 @@
-package co.uap.proiv.jobs.Controller; // Cambié el paquete a co.uap.proiv.jobs.Controller para que coincida con la estructura de paquetes de tu proyecto
-import org.junit.jupiter.api.BeforeAll; // Importa para la anotación @BeforeAll que indica que el método se ejecutará antes de todos los tests
-import org.junit.jupiter.api.AfterAll; // Importa para la anotación @AfterAll que indica que el método se ejecutará después de todos los tests
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc; //Importa para la anotación @AutoConfigureMockMvc que permite la configuración automática de MockMvc en pruebas de integración
-import org.springframework.boot.test.context.SpringBootTest; //Importa para la anotación @Spring BootTest que indica que se trata de una prueba de integración que carga el contexto completo de Spring Boot
-import okhttp3.mockwebserver.MockWebServer; //Importa para la clase MockWebServer que permite simular un servidor web para pruebas de integración
-import org.springframework.beans.factory.annotation.Autowired; //Importa para la anotación @Autowired que permite la inyección de dependencias en Spring
-import org.springframework.test.web.servlet.MockMvc; //Importa para la clase MockMvc que permite realizar solicitudes HTTP simuladas a los controladores de Spring MVC en pruebas
-import java.io.IOException; //Importa para la clase IOException que se utiliza para manejar excepciones de entrada/salida
+package com.uap.proiv.jobs.controller;
 
-import java.time.Duration; //Importa para la clase Duration que se utiliza para representar un período de tiempo
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.uap.proiv.jobs.client.UserApiRepository;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test; // CORREGIDO: Import de JUnit 5
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.MediaType; // CORREGIDO: Solo se mantiene MediaType de Spring
+import org.springframework.test.web.servlet.MockMvc;
+import static org.junit.jupiter.api.Assertions.assertEquals; // CORREGIDO: Import de JUnit 5
+import okhttp3.mockwebserver.RecordedRequest;
 
-import okhttp3.mockwebserver.MockResponse; //Importa para la clase MockResponse que permite simular respuestas HTTP en pruebas de integración
+import java.io.IOException;
+import java.net.http.HttpClient;
+import java.time.Duration;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-
 public class UserControllerIntegrationTest {
-
+    
     @Autowired
-
     MockMvc mockMvc;
 
     @Autowired
     ObjectMapper objectMapper;
 
-    @Autowired UserApiRepository;
+    @Autowired
+    UserApiRepository userApiRepository;
 
     static MockWebServer mockWebServer;
- 
-    @beforeAll //antes de todo se ejecuta un server mock para simular las respuestas de la API externa
-    public static void setUp() throws IOException {
+
+    @BeforeAll
+    public static void setup() throws IOException {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
     }
 
-    @AfterAll //Después de los test se cierra el server Mock
+    @AfterAll
     public static void tearDown() throws IOException {
         mockWebServer.close();
     }
 
-    @TestConfiguration 
+    @TestConfiguration
     static class TestConfig {
+        // Aquí puedes definir beans de prueba si es necesario
         @Bean
         @Primary
         public UserApiRepository userApiRepository(ObjectMapper objectMapper) {
             HttpClient httpClient = HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(10))
                     .build();
-            String baseUrl = mockWebServer.url("/api/users").toString(); // Se obtiene la URL del MockWebServer
-            String apiKey = "free_user_3HYTiqu2JKQ4TfGq884xW5mqfrd"
-
-            return new UserApiRepository(httpClient, objectMapper, baseUrl, apiKey);
-        } 
-        @Test
-        @DisplayName ("Get api/users/{id} User Controller, User service and UserApiRepository")
-
-        void getUserById() {
-
-            String jsonResponse = """
-                    {
-            
-                        "id": 1,
-                        "first_name": "John",
-                        "last_name": "Doe",
-                        "avatar": "https://requres.in/img/faces/2.jpg",
-                        "email": "john.doe@example.com"
-                    """;
-                    mockServer.enqueue(new MockResponse()
-                    .setBody(jsonResponse)
-                    .setResponseCode(200)
-                    .addHeader("Content-Type", "application/json"));
-
-                    mockMvc.perform(get("/api/users/2"))
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(jsonPath("$.id").value(2))
-                    .andExpect(jsonPath("$.first_name").value("John"))
-                    .andExpect(jsonPath("$.last_name").value("Doe"))
-                    .andExpect(jsonPath("$.avatar").value("https://requres.in/img/faces/2.jpg"));
-
+            String baseUrl = mockWebServer.url("/api/users").toString();
+            String apiKey = "free_user_3HYTiqu2JKQ4TfGq884xW5mqfrd";
+            return new UserApiRepository(httpClient,objectMapper, baseUrl, apiKey);
         }
-            RecordedRequest recordedRequest = mockWebServer.takeRequest(); // Se obtiene la solicitud registrada en el MockWebServer
-            assertEquals(expected: "aplocation/json". request.getGeader(name: "Accept")); // Se verifica que la cabecera "Accept" de la solicitud sea "application/json"
-            assertEquals(expected: "free_user_3HYTiqu2JKQ4TfGq884xW5mqfrd", request.getHeader(name: "X-API-KEY")); // Se verifica que la cabecera "Authorization" de la solicitud sea
-        
-    }
-}
-package co.uap.proiv.jobs.Controller; // Cambié el paquete a co.uap.proiv.jobs.Controller para que coincida con la estructura de paquetes de tu proyecto
-import org.junit.jupiter.api.BeforeAll; // Importa para la anotación @BeforeAll que indica que el método se ejecutará antes de todos los tests
-import org.junit.jupiter.api.AfterAll; // Importa para la anotación @AfterAll que indica que el método se ejecutará después de todos los tests
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc; //Importa para la anotación @AutoConfigureMockMvc que permite la configuración automática de MockMvc en pruebas de integración
-import org.springframework.boot.test.context.SpringBootTest; //Importa para la anotación @Spring BootTest que indica que se trata de una prueba de integración que carga el contexto completo de Spring Boot
-import okhttp3.mockwebserver.MockWebServer; //Importa para la clase MockWebServer que permite simular un servidor web para pruebas de integración
-import org.springframework.beans.factory.annotation.Autowired; //Importa para la anotación @Autowired que permite la inyección de dependencias en Spring
-import org.springframework.test.web.servlet.MockMvc; //Importa para la clase MockMvc que permite realizar solicitudes HTTP simuladas a los controladores de Spring MVC en pruebas
-import java.io.IOException; //Importa para la clase IOException que se utiliza para manejar excepciones de entrada/salida
-
-import java.time.Duration; //Importa para la clase Duration que se utiliza para representar un período de tiempo
-
-import okhttp3.mockwebserver.MockResponse; //Importa para la clase MockResponse que permite simular respuestas HTTP en pruebas de integración
-
-
-@SpringBootTest
-@AutoConfigureMockMvc
-
-public class UserControllerIntegrationTest {
-
-    @Autowired
-
-    MockMvc mockMvc;
-
-    @Autowired
-    ObjectMapper objectMapper;
-
-    @Autowired UserApiRepository;
-
-    static MockWebServer mockWebServer;
- 
-    @beforeAll //antes de todo se ejecuta un server mock para simular las respuestas de la API externa
-    public static void setUp() throws IOException {
-        mockWebServer = new MockWebServer();
-        mockWebServer.start();
     }
 
-    @AfterAll //Después de los test se cierra el server Mock
-    public static void tearDown() throws IOException {
-        mockWebServer.close();
+    @Test
+    @DisplayName("GET api/users/{id} integracion UserController, UserService, UserRepository, mock api externa")
+    void getUserById() throws Exception {
+        String jsonResponse = """
+                {
+                    "id" : 2,
+                    "email" : "juan@gmail.com",
+                    "first_name" : "Juan",
+                    "last_name" : "Perez",
+                    "avatar" : "https://reqres.in/img/faces/2.jpg"
+                }
+                """;
+        mockWebServer.enqueue(new MockResponse().setBody(jsonResponse)
+        .setResponseCode(200)
+        .addHeader("Content-Type", "application/json")
+    );
+
+     mockMvc.perform(get("/api/user/id/2"))
+    .andExpect(status().isOk())
+    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+    .andExpect(jsonPath("$.id").value(2))
+    .andExpect(jsonPath("$.email").value("juan@gmail.com"))
+    .andExpect(jsonPath("$.first_name").value("Juan"))
+    .andExpect(jsonPath("$.last_name").value("Perez"))
+    .andExpect(jsonPath("$.avatar").value("https://reqres.in/img/faces/2.jpg"));
+
+    RecordedRequest request = mockWebServer.takeRequest();
+    assertEquals("application/json", request.getHeader("Accept"));
+    assertEquals("free_user_3HYTiqu2JKQ4TfGq884xW5mqfrd", request.getHeader("X-API-KEY"));
     }
 
-    @TestConfiguration 
-    static class TestConfig {
-        @Bean
-        @Primary
-        public UserApiRepository userApiRepository(ObjectMapper objectMapper) {
-            HttpClient httpClient = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .build();
-            String baseUrl = mockWebServer.url("/api/users").toString(); // Se obtiene la URL del MockWebServer
-            String apiKey = "free_user_3HYTiqu2JKQ4TfGq884xW5mqfrd"
+    @Test
+    @DisplayName(" POST /api/user/update integracion UserController, UserService, UserRepository, moc api externa")
+    void updateUser_success() throws Exception {
+        String updateResponse =
+        """
+        {
+        "name" : "morpheusX",
+        "job" : "Zion residentX",
+        "updatedAt" : "2024-01-01T12:00:00.000Z"
+        }        
+        """;
 
-            return new UserApiRepository(httpClient, objectMapper, baseUrl, apiKey);
-        } 
-        @Test
-        @DisplayName ("Get api/users/{id} User Controller, User service and UserApiRepository")
 
-        void getUserById() {
+    mockWebServer.enqueue(new MockResponse()
+    .setBody(updateResponse)
+    .setResponseCode(200)
+    .addHeader("Content-Type", "application/json"));
 
-            String jsonResponse = """
-                    {
-            
-                        "id": 1,
-                        "first_name": "John",
-                        "last_name": "Doe",
-                        "avatar": "https://requres.in/img/faces/2.jpg",
-                        "email": "john.doe@example.com"
-                    """;
-                    mockServer.enqueue(new MockResponse()
-                    .setBody(jsonResponse)
-                    .setResponseCode(200)
-                    .addHeader("Content-Type", "application/json"));
-
-                    mockMvc.perform(get("/api/users/2"))
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(jsonPath("$.id").value(2))
-                    .andExpect(jsonPath("$.first_name").value("John"))
-                    .andExpect(jsonPath("$.last_name").value("Doe"))
-                    .andExpect(jsonPath("$.avatar").value("https://requres.in/img/faces/2.jpg"));
-
-        }
-            RecordedRequest recordedRequest = mockWebServer.takeRequest(); // Se obtiene la solicitud registrada en el MockWebServer
-            assertEquals(expected: "aplocation/json". request.getGeader(name: "Accept")); // Se verifica que la cabecera "Accept" de la solicitud sea "application/json"
-            assertEquals(expected: "free_user_3HYTiqu2JKQ4TfGq884xW5mqfrd", request.getHeader(name: "X-API-KEY")); // Se verifica que la cabecera "Authorization" de la solicitud sea
-        
+    String userJson = 
+    """
+    {
+    "id" : 1,
+    "first_name" : "Carlos",
+    "last_name" : "Perez"        
     }
+    """;
+
+    mockMvc.perform(post("/api/user/update")
+    .contentType(MediaType.APPLICATION_JSON)
+    .content(userJson)).andExpect(status().isOk()).andExpect(content().string("User created successfully"));
+
+    RecordedRequest request = mockWebServer.takeRequest();
+    assertEquals("/api/users/1", request.getPath());
+    assertEquals("application/json", request.getHeader("Accept"));
+    assertEquals("free_user_3HYTiqu2JKQ4TfGq884xW5mqfrd", request.getHeader("X-API-KEY"));
+
+    }
+
 }
